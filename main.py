@@ -2,10 +2,11 @@ from pytube import YouTube, Playlist, Channel
 import os
 import moviepy.editor as mp
 import time
+import re
 
 def download_video(Url, Download_folder):
     yt = YouTube(Url)
-    title = yt.title.encode().decode('utf8')
+    title = re.sub(r'[\\:*?"<>]', '', yt.title)
     audiofile_name = 'unknown_mp3.mp4'
     moviefile_name = 'unknown_mp4.mp4'
 
@@ -54,15 +55,13 @@ elif("playlist?" in url):  #download all videos from playlist
             download_video(video.watch_url, download_folder)
             progress += 1
             total_video_time = format(((time.time() - time_video_start) / 60), '.2f')
-            print(f"Downloading video complete in {total_video_time}m", end='\n')
+            print(f"Downloading video complete in {total_video_time}m")
             print(f"Total progress: {progress}/{total_count}", end='\n\n')
         except:
             print("Downloading error")
             continue
 
-
-
-    total_playlist_time = float('{.2f}'.format((time.time()-time_playlist_start)/60))
+    total_playlist_time = format((time.time()-time_playlist_start)/60, '.2f')
     print(f"Downloading playlist complete in {total_playlist_time}m")
 
 
