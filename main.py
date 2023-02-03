@@ -9,7 +9,7 @@ import math
 
 def download_video(url, Download_folder):
     yt = YouTube(url)
-    title = re.sub(r'[\\:*?"<>/]', '', yt.title)
+    title = re.sub(r'[\\/:*?"<>/]', '', yt.title)
     tmp_audio_file = 'unknown_mp3.mp4'
     tmp_video_file = 'unknown_mp4.mp4'
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         print(Fore.GREEN + f"Video download completed in {total_video_min}m {total_video_sec}s", end='\n\n')
     elif "playlist?" in url:  # download all videos from playlist
         p = Playlist(url)
-        playlist_title = p.title
+        playlist_title = re.sub(r'[\\/:*?"<>/]', '', p.title)
         start_time = time.time()
         print(Fore.YELLOW + f"Start downloading playlist {playlist_title}")
         download_folder = f"{download_folder}/{playlist_title}"
