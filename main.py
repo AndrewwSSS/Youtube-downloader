@@ -1,10 +1,11 @@
 from pytube import YouTube, Playlist, Channel
 from colorama import init, Fore
 import os
-# import moviepy.editor as mp
+import uuid
 import time
 import re
 import math
+from win32com.shell import shell, shellcon
 
 
 def download_video(video_url, download_folder):
@@ -24,7 +25,7 @@ def download_video(video_url, download_folder):
     time_difference = (time.time() - downloading_sources) / 60
     minutes = int(time_difference)
     seconds = math.ceil((time_difference - minutes) * 60)
-    print(Fore.GREEN + f"[DEBUG] Download sources completed in {minutes}m {seconds}s")
+    print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Download sources completed in {minutes}m {seconds}s")
 
     merge_time = time.time()
 
@@ -34,27 +35,29 @@ def download_video(video_url, download_folder):
     os.system(cmd)
 
     # clear excess
+    os.rename(f"{download_folder}\\123result123.mp4", f"{download_folder}\\{title}.mp4")
 
-    os.chdir(download_folder)
-    os.rename(f"123result123.mp4", f"{title}.mp4")
-
-    os.remove(audio_file)
-    os.remove(video_file)
+    os.remove(f"{download_folder}/{audio_file}")
+    os.remove(f"{download_folder}/{video_file}")
 
     time_difference = (time.time() - merge_time) / 60
     minutes = int(time_difference)
     seconds = math.ceil((time_difference - minutes) * 60)
-    print(Fore.GREEN + f"[DEBUG] Merge completed in {minutes}m {seconds}s")
+    print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Merge completed in {minutes}m {seconds}s")
 
 
 if __name__ == "__main__":
+    path = shell.SHGetFolderPath(0, shellcon.CSIDL_MYVIDEO, None, 0)
+    print(f"{path}\Downloads")
     url = input("Enter video or playlist URL: ")
+
     download_folder = input("Enter download folder: ")
 
-    if not os.path.exists(download_folder):
-        print(Fore.RED + "Folder not found!")
-        input()
-        exit()
+    #
+    # if not os.path.exists(download_folder):
+    #     print(Fore.RED + "Folder not found!")
+    #     input()
+    #     exit()
 
     if 'watch?' in url:  # download video
         time_start = time.time()
@@ -70,7 +73,9 @@ if __name__ == "__main__":
         p = Playlist(url)
         playlist_title = re.sub(r'[\\:*?"<>/|]', '', p.title)
         start_time = time.time()
+
         print(Fore.YELLOW + f"Start downloading playlist {playlist_title}")
+
         download_folder = f"{download_folder}/{playlist_title}"
         os.mkdir(download_folder)
 
