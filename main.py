@@ -1,28 +1,33 @@
-from pytube import YouTube, Playlist, Channel
-from colorama import init, Fore
+from pytube import YouTube, Playlist
+from  pytube.exceptions import PytubeError
+from colorama import Fore
+from win32com.shell import shell, shellcon
+from threading import *
 import os
-import uuid
 import time
 import re
 import math
-from win32com.shell import shell, shellcon
+import uuid
 
 
 def download_video(video_url, download_folder):
+
     yt = YouTube(video_url)
+
     title = re.sub(r'[\\:*?"<>/|]', '', yt.title)
     downloading_sources = time.time()
-    audio_file = 'unknown1.mp4'
-    video_file = 'unknown2.mp4'
+    audio_file = f'{uuid.uuid1()}.mp4'
+    video_file = f'{uuid.uuid1()}.mp4'
 
     # download audio stream
     yt.streams.filter(mime_type="audio/mp4").first().download(download_folder, audio_file)
 
     # download video stream
+
     yt.streams.filter(mime_type="video/mp4").order_by('resolution') \
         .desc().first().download(download_folder, filename=video_file)
-
     time_difference = (time.time() - downloading_sources) / 60
+
     minutes = int(time_difference)
     seconds = math.ceil((time_difference - minutes) * 60)
     print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Download sources completed in {minutes}m {seconds}s")
@@ -30,12 +35,12 @@ def download_video(video_url, download_folder):
     merge_time = time.time()
 
     # merge two streams
-
-    cmd = f"ffmpeg -i {download_folder}/{audio_file} -i {download_folder}/{video_file} -c:v copy {download_folder}/123result123.mp4 -v error"
+    file_name = uuid.uuid1()
+    cmd = f"ffmpeg -i {download_folder}/{audio_file} -i {download_folder}/{video_file} -c:v copy {download_folder}/{file_name}.mp4 -v error"
     os.system(cmd)
 
     # clear excess
-    os.rename(f"{download_folder}\\123result123.mp4", f"{download_folder}\\{title}.mp4")
+    os.rename(f"{download_folder}/{file_name}.mp4", f"{download_folder}/{title}.mp4")
 
     os.remove(f"{download_folder}/{audio_file}")
     os.remove(f"{download_folder}/{video_file}")
@@ -47,28 +52,33 @@ def download_video(video_url, download_folder):
 
 
 if __name__ == "__main__":
-    path = shell.SHGetFolderPath(0, shellcon.CSIDL_MYVIDEO, None, 0)
-    print(f"{path}\Downloads")
     url = input("Enter video or playlist URL: ")
-
     download_folder = input("Enter download folder: ")
 
-    #
-    # if not os.path.exists(download_folder):
-    #     print(Fore.RED + "Folder not found!")
-    #     input()
-    #     exit()
+    if not os.path.exists(download_folder):
+        video_folder = shell.SHGetFolderPath(0, shellcon.CSIDL_MYVIDEO, None, 0)
+        download_folder = video_folder
+        print(Fore.RED + "Download folder not found!")
+        print(Fore.RED + f"Downloading in default folder: {video_folder}", end='\n\n')
 
     if 'watch?' in url:  # download video
         time_start = time.time()
-        print(Fore.YELLOW + f"Downloading video")
-        download_video(url, download_folder)
+
+        while True:
+            print(Fore.YELLOW + f"Downloading video...")
+            try:
+                download_video(url, download_folder)
+                break
+            except PytubeError:
+                print(Fore.RED + "[Debug] Download error. Retry...", end='\n\n')
+                continue
 
         difference = (time.time() - time_start) / 60
-        total_video_min = int(difference)
-        total_video_sec = math.ceil((difference - total_video_min) * 60)
+        min = int(difference)
+        sec = math.ceil((difference - min) * 60)
 
-        print(Fore.GREEN + f"Video download completed in {total_video_min}m {total_video_sec}s", end='\n\n')
+        print(Fore.GREEN + f"Video download completed in {min}m {sec}s", end='\n\n')
+        input()
     elif "playlist?" in url:  # download all videos from playlist
         p = Playlist(url)
         playlist_title = re.sub(r'[\\:*?"<>/|]', '', p.title)
@@ -77,54 +87,38 @@ if __name__ == "__main__":
         print(Fore.YELLOW + f"Start downloading playlist {playlist_title}")
 
         download_folder = f"{download_folder}/{playlist_title}"
-        os.mkdir(download_folder)
+
+        if not os.path.exists(download_folder):
+            os.mkdir(download_folder)
 
         progress = 0
         total_count = len(p.video_urls)
+
         for video in p.videos:
             time_start = time.time()
-            print(Fore.YELLOW + f"Downloading video {video.title}...")
 
-            # try:
-
-            download_video(video.watch_url, download_folder)
-            progress += 1
+            while True:
+                try:
+                    print(Fore.YELLOW + f"Downloading video {video.watch_url}")
+                    download_video(video.watch_url, download_folder)
+                    progress += 1
+                    break
+                except PytubeError:
+                    print(Fore.RED + "[Debug] Download error. Retry...", end='\n\n')
+                    continue
 
             difference = (time.time() - time_start) / 60
-            total_video_min = int(difference)
-            total_video_sec = math.ceil((difference - total_video_min) * 60)
+            min = int(difference)
+            sec = math.ceil((difference - min) * 60)
 
-            print(Fore.GREEN + f"Video download completed in {total_video_min}m {total_video_sec}s")
+            print(Fore.GREEN + f"Video download completed in {min}m {sec}s")
             print(Fore.GREEN + f"Total progress: {progress}/{total_count}", end='\n\n')
 
-            # except PytubeError:
-            #     print(Fore.RED + "! Downloading error !")
-            #     continue
-
         difference = (time.time() - start_time) / 60
-        total_video_min = int(difference)
-        total_video_sec = math.ceil((difference - total_video_min) * 60)
+        min = int(difference)
+        sec = math.ceil((difference - min) * 60)
 
-        print(f"Playlist download completed in {total_video_min}m {total_video_sec}s")
+        print(f"Playlist download completed in {min}m {sec}s")
+        input("Press Enter to exit")
 
-# elif('@' in url):  #download all videos from channel
-#     c = Channel(url)
-#     channel_title = c.title
-#     time_channel_start = time.time()
-#     print(f"Start downloading all videos from {channel_title}")
-#     download_folder = f"{download_folder}/{channel_title}"
-#     os.mkdir(download_folder)
-#
-#     progress = 0
-#     total_count = len(c.video_urls)
-#     for video in c.videos:
-#         time_start = time.time()
-#         print(f"Downloading video {video.title}...")
-#         download_video(video.watch_url, download_folder)
-#         progress += 1
-#         total_video_time = format(((time.time() - time_start)/60), '.2f')
-#         print(f"Downloading video complete in {total_video_time}m", end='\n')
-#         print(f"Current progress: {progress}/{total_count}")
-#
-#     total_playlist_time = float('{.2f}'.format((time.time()-time_channel_start)/60))
-#     print(f"Downloading videos from channel complete in {total_playlist_time}m")
+
