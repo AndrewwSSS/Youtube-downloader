@@ -10,6 +10,25 @@ import math
 import uuid
 
 
+def aboba(video_url, download_folder):
+    time_start = time.time()
+
+    while True:
+        try:
+            # print(Fore.YELLOW + f"Downloading video {video_url}")
+            download_video(video_url, download_folder)
+            break
+        except PytubeError:
+            # print(Fore.RED + "[Debug] Download error. Retry...", end='\n\n')
+            continue
+
+    difference = (time.time() - time_start) / 60
+    min = int(difference)
+    sec = math.ceil((difference - min) * 60)
+
+    print(Fore.GREEN + f"Video download completed in {min}m {sec}s")
+
+
 def download_video(video_url, download_folder):
 
     yt = YouTube(video_url)
@@ -30,7 +49,7 @@ def download_video(video_url, download_folder):
 
     minutes = int(time_difference)
     seconds = math.ceil((time_difference - minutes) * 60)
-    print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Download sources completed in {minutes}m {seconds}s")
+    # print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Download sources completed in {minutes}m {seconds}s")
 
     merge_time = time.time()
 
@@ -48,7 +67,8 @@ def download_video(video_url, download_folder):
     time_difference = (time.time() - merge_time) / 60
     minutes = int(time_difference)
     seconds = math.ceil((time_difference - minutes) * 60)
-    print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Merge completed in {minutes}m {seconds}s")
+    print(Fore.LIGHTYELLOW_EX + f"[DEBUG] " + title)
+    # print(Fore.LIGHTYELLOW_EX + f"[DEBUG] Merge completed in {minutes}m {seconds}s")
 
 
 if __name__ == "__main__":
@@ -94,25 +114,26 @@ if __name__ == "__main__":
         progress = 0
         total_count = len(p.video_urls)
 
-        for video in p.videos:
-            time_start = time.time()
-
-            while True:
-                try:
-                    print(Fore.YELLOW + f"Downloading video {video.watch_url}")
-                    download_video(video.watch_url, download_folder)
-                    progress += 1
-                    break
-                except PytubeError:
-                    print(Fore.RED + "[Debug] Download error. Retry...", end='\n\n')
-                    continue
-
-            difference = (time.time() - time_start) / 60
-            min = int(difference)
-            sec = math.ceil((difference - min) * 60)
-
-            print(Fore.GREEN + f"Video download completed in {min}m {sec}s")
-            print(Fore.GREEN + f"Total progress: {progress}/{total_count}", end='\n\n')
+        threads_count = 16
+        while True:
+            if total_count - progress <= threads_count:
+                threads = []
+                for vid in p.video_urls[progress:total_count]:
+                    threads.append(Thread(target=aboba, args=(vid, download_folder)))
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+                break
+            else:
+                threads = []
+                for vid in p.video_urls[progress:progress+threads_count]:
+                    threads.append(Thread(target=aboba, args=(vid, download_folder)))
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+                progress += threads_count
 
         difference = (time.time() - start_time) / 60
         min = int(difference)
@@ -120,5 +141,3 @@ if __name__ == "__main__":
 
         print(f"Playlist download completed in {min}m {sec}s")
         input("Press Enter to exit")
-
-
