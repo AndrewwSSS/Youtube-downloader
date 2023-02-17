@@ -16,6 +16,7 @@ git clone https://github.com/Andreww2281/Youtube-downloader.git
 ```
 
 and than unpack "portable version.rar"
+
 and run main.exe
 
 # Usage
@@ -30,7 +31,8 @@ and run main.exe
 
 # Features
 
-If you enter non-existent folder programm will try to create its
+If you enter non-existent folder programm will try to create its 
+
 Default folder proccessing in runtime with win api
 
 
