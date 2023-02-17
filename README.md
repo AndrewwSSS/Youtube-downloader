@@ -15,9 +15,9 @@ or
 git clone https://github.com/Andreww2281/Youtube-downloader.git
 ```
 
-and than unpack "portable version.rar"
+1) unpack "portable version.rar"
 
-and run main.exe
+2) run main.exe
 
 # Usage
 
