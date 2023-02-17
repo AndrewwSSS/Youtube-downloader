@@ -1,8 +1,40 @@
 
 This program can download videos in highest quality by url, also can download whole playlists
 
-For dowload video or whole plailist you shoud just enter the url and optional download folder
+# Setup
 
-default download folder - C:\Users\User\Videos or default videos folder in your windows
-![image](https://user-images.githubusercontent.com/76648798/218820541-3fd2567e-2d7f-473b-94fc-672d03f7b447.png)
+```
+git clone https://github.com/Andreww2281/Youtube-downloader.git
+cd Youtube-downloader
+pip install -r requirements.txt
+python main.py
+```
+or
+
+```
+git clone https://github.com/Andreww2281/Youtube-downloader.git
+```
+
+and than unpack "portable version.rar"
+and run main.exe
+
+# Usage
+
+## Download videos
+
+![image](https://user-images.githubusercontent.com/76648798/219590322-34225cfe-cc37-4a79-90b9-c6deab89db2b.png)
+
+## Download playlists
+
+![image](https://user-images.githubusercontent.com/76648798/219599944-51b0a0c1-8806-49d9-925d-ac584eeb501c.png)
+
+# Features
+
+If you enter non-existent folder programm will try to create its
+Default folder proccessing in runtime with win api
+
+
+
+
+
 
